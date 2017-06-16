@@ -33,4 +33,4 @@ localDHT["my_key"] = [u"Timestap",
 peers = localDHT.peers()
 
 if __name__ == "__main__":
-    app.run()
+    app.run(port="80", debug=True)
