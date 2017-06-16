@@ -31,3 +31,6 @@ localDHT["my_key"] = [u"Timestap",
                       u"Object"]
 # Returns your peers
 peers = localDHT.peers()
+
+if __name__ == "__main__":
+    app.run()
