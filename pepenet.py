@@ -8,6 +8,17 @@ host1, port1 = 'localhost', 3000
 host2, port2 = 'localhost', 3001
 
 
+def get_saved_peers(filename):
+    peer_list = []
+    with open(filename, 'r') as peers:
+        for line in peers:
+            peer = line.split(" ")
+            peer[1] = int(peer[1])
+            peer_list.append(tuple(peer))
+
+    return peer_list
+
+
 @app.route("/")
 def hello():
 
@@ -19,7 +30,7 @@ def hello():
 
 
 # the storage parameter allows us to cache the keys locally and persistently
-localDHT = DHT(host1, port1, storage=shelve.open('pepes.ree'))
+localDHT = DHT(host1, port1)
 
 # seeds is a list of tuples (host, port), which contains the bootstrap
 # nodes for our dht, we should load them from a file and update the at
@@ -33,4 +44,4 @@ localDHT["my_key"] = [u"Timestap",
 peers = localDHT.peers()
 
 if __name__ == "__main__":
-    app.run(port=80, debug=True)
+    app.run(port=8080, debug=True)
