@@ -81,5 +81,4 @@ class PubSub:
             except Exception as exc:
                 logging.error(exc)
 
-            self.__subscription_fetch_data()
             return True
