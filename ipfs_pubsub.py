@@ -40,7 +40,10 @@ class PubSub:
             return json.loads(response.read().decode("utf-8"))["Strings"]
 
     def topic_peer_number(self, topic):
-        return len(self.topic_peers(topic))
+        peers = self.topic_peers(topic)
+        if peers:
+            return len(peers)
+        return 0
 
     def topic_pub(self, topic, payload):
         "Publishes payload to topic, returns True if successfull"
@@ -64,13 +67,18 @@ class PubSub:
                     decoded_msg = msg.decode("utf-8")
                     if decoded_msg != "{}":
                         # Here we get the actual data in base 64
-                        data = {"data": decoded_msg.split(",")[1].split(":")[1]
+                        data = {"content":
+                                decoded_msg.split(",")[1].split(":")[1],
                                 "sender": decoded_msg.split(",")[0].
                                 split(":")[1],
                                 "timestamp": time()
-                               }
+                                }
                         logging.debug("Received data: ".format(data))
                         if data:
+                            for callback in self.\
+                                            subscriptions[topic]["on_receive"]:
+                                callback(data)
+
                             self.subscriptions[topic]["msg"].append(data)
             sleep(self.sub_update_interval)
 
@@ -92,9 +100,11 @@ class PubSub:
                 iterator = socket.iter_lines()
                 update_thread = Thread(target=self._subscription_fetch_data,
                                        args=(topic,))
+                # on_receive should be a list of callbacks
                 self.subscriptions[topic] = {"socket": [socket, iterator],
                                              "thread": update_thread,
-                                             "msg": []
+                                             "msg": [],
+                                             "on_receive": []
                                              }
                 update_thread.start()
             except Exception as exc:
@@ -102,10 +112,36 @@ class PubSub:
 
             return True
 
+    def topic_set_callback(self, topic, func):
+        """
+        Sets func as callback for topic update, func is called as follow
+        func(data)
+        where data is a dict with the following keys:
+        ['hash', 'timestamp', 'sender']
+        """
+        if self.subscriptions[topic]:
+            self.subscriptions[topic]["on_receive"].append(func)
+
     def topic_pop_message(self, topic):
         # FIFO data stack
         if self.subscriptions[topic]["msg"]:
             return b64decode(self.subscriptions[topic]["msg"].pop(0))
+
+    def topic_pop_messages_from_sender(self, topic, sender):
+        # FIFO data stack
+        messages = set()
+        removable = []
+        if self.subscriptions[topic]["msg"]:
+            for msg in self.subscriptions[topic]["msg"]:
+                if msg["sender"] == sender:
+                    messages.update(b64decode(msg["content"]))
+                    removable.append((msg,))
+
+            for msg in removable:
+                    self.subscriptions[topic]["msg"].remove(msg)
+
+        return messages
+
 
 if __name__ == "__main__":
     logging.error("Don't execute this module")

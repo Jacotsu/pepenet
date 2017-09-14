@@ -1,0 +1,60 @@
+<style>
+
+.pepe_item {
+    border: .1rem solid black;
+    width: 24%;
+    border-radius: 1rem;
+    display: inherit;
+    margin-top: .1rem;
+};
+
+.pepe_image {
+    border: .1rem solid black;
+    overflow: hidden;
+}
+
+.pepe_image_file {
+    width: 100%;
+    border-radius: 1rem 1rem 0 0;
+}
+
+.ban_button {
+    width: 50%;
+}
+
+.download_button {
+    width: 50%;
+}
+
+.pepe_info {
+    text-align: center;
+}
+
+.pepe_buttons {
+    text-align: center;
+    display: flex;
+}
+
+</style>
+
+<div class="pepe_item">
+    <div class="pepe_image">
+        <img class="pepe_image_file" src="{{pepe.url}}">
+    </div>
+
+    <div class="pepe_info">
+        <h1>
+            {{pepe.normieness}}
+        </h1>
+    </div>
+
+    <div class="pepe_buttons">
+        <a href="ban/{id}">
+            <img class="ban_button" src='https://upload.wikimedia.org/wikipedia/commons/1/14/Ban_sign.png'>
+        </a>
+        <a href="download/{id}">
+            <img class="download_button" src='http://mddnmr.spektrino.com/down.png'>
+        </a>
+    </div>
+
+</div>
