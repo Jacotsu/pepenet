@@ -1,4 +1,6 @@
 from urllib import request
+import requests
+from base64 import b64decode
 from urllib.parse import urlencode
 from threading import Thread
 from time import sleep
@@ -50,13 +52,19 @@ class PubSub:
             else:
                 return False
 
-    def __subscription_fetch_data(self):
+    def _subscription_fetch_data(self, topic):
         "Fetches the data for every subscribed topic and saves it"
         while True:
-            for topic, packed_topic in self.subscriptions.items():
-               # packed_topic["data"].append(packed_topic["socket"].
-               #                             read(512).decode("utf-8"))
-               pass
+            # topic_data["socket"][1] is the socket iterator
+            for msg in self.subscriptions[topic]["socket"][1]:
+                if msg:
+                    decoded_msg = msg.decode("utf-8")
+                    if decoded_msg != "{}":
+                        # Here we get the actual data in base 64
+                        data = decoded_msg.split(",")[1].split(":")[1]
+                        logging.debug("Received data: ".format(data))
+                        if data:
+                            self.subscriptions[topic]["data"].append(data)
             sleep(self.sub_update_interval)
 
     def topic_sub(self, topic, discover_peers=False):
@@ -68,17 +76,26 @@ class PubSub:
                                                          api_urls["sub"],
                                                          topic,
                                                          discover_peers)
-        if not self.update_thread:
-            self.update_thread = Thread(target=self.__subscription_fetch_data)
-            self.update_thread.start()
-            pass
-
         if topic not in self.subscriptions:
             try:
-                self.subscriptions[topic] = {"socket": request.urlopen(url),
+                socket = requests.get(url, stream=True)
+                iterator = socket.iter_lines()
+                update_thread = Thread(target=self._subscription_fetch_data,
+                                       args=(topic,))
+                self.subscriptions[topic] = {"socket": [socket, iterator],
+                                             "thread": update_thread,
                                              "data": []
                                              }
+                update_thread.start()
             except Exception as exc:
                 logging.error(exc)
 
             return True
+
+    def topic_pop_message(self, topic):
+        # FIFO data stack
+        if self.subscriptions[topic]["data"]:
+            return b64decode(self.subscriptions[topic]["data"].pop(0))
+
+if __name__ == "__main__":
+    logging.error("Don't execute this module")
