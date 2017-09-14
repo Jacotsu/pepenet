@@ -1,9 +1,9 @@
 from urllib import request
 import requests
 from base64 import b64decode
-from urllib.parse import urlencode
 from threading import Thread
 from time import sleep
+from time import time
 import logging
 import json
 
@@ -39,6 +39,9 @@ class PubSub:
         with request.urlopen(url) as response:
             return json.loads(response.read().decode("utf-8"))["Strings"]
 
+    def topic_peer_number(self, topic):
+        return len(self.topic_peers(topic))
+
     def topic_pub(self, topic, payload):
         "Publishes payload to topic, returns True if successfull"
         url = "http://{}:{}{}?arg={}&arg={}".format(self.host,
@@ -61,11 +64,18 @@ class PubSub:
                     decoded_msg = msg.decode("utf-8")
                     if decoded_msg != "{}":
                         # Here we get the actual data in base 64
-                        data = decoded_msg.split(",")[1].split(":")[1]
+                        data = {"data": decoded_msg.split(",")[1].split(":")[1]
+                                "sender": decoded_msg.split(",")[0].
+                                split(":")[1],
+                                "timestamp": time()
+                               }
                         logging.debug("Received data: ".format(data))
                         if data:
-                            self.subscriptions[topic]["data"].append(data)
+                            self.subscriptions[topic]["msg"].append(data)
             sleep(self.sub_update_interval)
+
+    def topic_data(self, topic):
+        return self.subscriptions[topic]["msg"]
 
     def topic_sub(self, topic, discover_peers=False):
         """
@@ -84,7 +94,7 @@ class PubSub:
                                        args=(topic,))
                 self.subscriptions[topic] = {"socket": [socket, iterator],
                                              "thread": update_thread,
-                                             "data": []
+                                             "msg": []
                                              }
                 update_thread.start()
             except Exception as exc:
@@ -94,8 +104,8 @@ class PubSub:
 
     def topic_pop_message(self, topic):
         # FIFO data stack
-        if self.subscriptions[topic]["data"]:
-            return b64decode(self.subscriptions[topic]["data"].pop(0))
+        if self.subscriptions[topic]["msg"]:
+            return b64decode(self.subscriptions[topic]["msg"].pop(0))
 
 if __name__ == "__main__":
     logging.error("Don't execute this module")
