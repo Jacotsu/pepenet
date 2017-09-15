@@ -21,6 +21,7 @@ def load_hash_set(path):
             for i in hash_list:
                 hashes.update((i.rstrip(),))
     except FileNotFoundError:
+        os.makedirs("/".join(path.split("/")[:-1]), exist_ok=True)
         open(path, "w").close()
     logging.debug("Loaded {} as {}".format(path, hashes))
     return hashes
@@ -52,7 +53,7 @@ class PepeMan:
         self.banned_pepes_path = banned_pepes_path
 
         # Local list of pepes
-        self.local_pepes = load_hash_set(local_pepes_path)
+        self.local_pepes = load_hash_set(local_pepes_path) - self.banned_pepes
         self.local_pepes_path = local_pepes_path
         for key in pepenet_channels:
             self.pubsub.topic_sub(pepenet_channels[key])
@@ -99,7 +100,7 @@ class PepeMan:
         encoded_pepe_hash = self.pubsub.\
             topic_pop_messages_from_sender(pepenet_channels["update"],
                                            sender_id)
-        logging.debug("update_request: {}".format(encoded_pepe_hash))
+
         for i in encoded_pepe_hash:
             logging.debug("decoding {} decoded {}".format(i, b64decode(i)))
             pepe_hash.append(b64decode(i).decode("utf-8"))
@@ -110,10 +111,14 @@ class PepeMan:
         # Then we check if they've sent us some new hashes
         new_hash_delta = received_hashes - self.local_pepes
 
-        if (received_hashes not in self.local_pepes):
-            delta = self.local_pepes - received_hashes
-            for i in delta:
-                self.pubsub.topic_pub(pepenet_channels["update"], i)
+        delta = self.local_pepes - received_hashes
+        logging.debug("Sending hashes: {}".format(delta))
+
+        for i in delta:
+            self.pubsub.topic_pub(pepenet_channels["update"], i)
+        if delta:
+            self.pubsub.topic_pub(pepenet_channels["update_control"],
+                                  control_codes["updating_finished"])
 
         self.local_pepes.update(new_hash_delta)
 
