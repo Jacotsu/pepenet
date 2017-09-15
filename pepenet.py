@@ -5,7 +5,8 @@ import pepe
 from flask import Flask, request, redirect, render_template, flash
 from werkzeug.utils import secure_filename
 import logging
-import atexit
+from threading import Thread
+from time import sleep
 
 ipfs_host = "localhost"
 ipfs_port = "5001"
@@ -24,17 +25,15 @@ pman = pepe.PepeMan(ipfs)
 
 theme = "default"
 
-html = {}
-
-pepe1 = {"url": "https://media4.s-nbcnews.com/j/msnbc/components/video/201609"
-         "/a_ov_pepe_160928.nbcnews-ux-1080-600.jpg",
-         "normieness": 1,
-         "hash": ""
-         }
-
 
 def generate_pepes():
     "Used for debugging"
+    pepe1 = {"url": "https://media4.s-nbcnews.com/j/msnbc/components/video/"
+             "201609"
+             "/a_ov_pepe_160928.nbcnews-ux-1080-600.jpg",
+             "normieness": 1,
+             "hash": ""
+             }
     result = []
     for i in range(100):
         result.append(pepe1)
@@ -132,12 +131,19 @@ def upload_file():
     '''
 
 
-def close_running_threads():
-    pman.save_pepes_lists()
+def save_pepes():
+    while True:
+        pman.save_pepes_lists()
+        sleep(30)
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.DEBUG)
-    atexit.register(close_running_threads)
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s -'
+                        '%(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    data_saver_thread = Thread(target=save_pepes)
+    data_saver_thread.start()
     logging.debug("Flask path: {}".format(app.instance_path))
     app.run(port=8000, debug=True)

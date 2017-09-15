@@ -16,6 +16,8 @@
 .pepe_image_file {
     width: 100%;
     border-radius: 1rem 1rem 0 0;
+    object-fit: cover;
+    height: 70%;
 }
 
 .ban_button {
@@ -39,7 +41,9 @@
 
 <div class="pepe_item">
     <div class="pepe_image">
-        <img class="pepe_image_file" src="{{pepe.url}}">
+        <a href="{{pepe.url}}">
+            <img class="pepe_image_file" src="{{pepe.url}}">
+        </a>
     </div>
 
     <div class="pepe_info">

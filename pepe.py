@@ -1,12 +1,13 @@
 import ipfs_pubsub
-from time import time
+from base64 import b64decode
+import os
 import logging
 
 pepenet_channels = {"upload": "dev_pepenet_pepes_upload",
                     "update_control": "dev_pepenet_pepes_update_control",
                     "update": "dev_pepenet_pepes_update"
                     }
-control_codes = {"uploading_finished": 0
+control_codes = {"updating_finished": "0"
 
                  }
 
@@ -30,7 +31,7 @@ def save_hash_set(path, hash_set):
     malicious files or protecting the dht"""
     with open(path, "w") as hash_list:
         for i in hash_set:
-            hash_list.write(i)
+            hash_list.write(i + "\n")
 
 
 class PepeMan:
@@ -59,7 +60,10 @@ class PepeMan:
         self.pubsub.topic_set_callback(pepenet_channels["update_control"],
                                        self._on_update_control)
 
-        #self.update_pepe_list(self.local_pepes)
+        self.pubsub.topic_set_callback(pepenet_channels["upload"],
+                                       self._on_upload)
+
+        self.update_pepe_list(self.local_pepes)
 
     def update_pepe_list(self, rare_pepes_set):
         """
@@ -74,11 +78,14 @@ class PepeMan:
             self.pubsub.topic_pub(pepenet_channels["update"], pepe)
 
         self.pubsub.topic_pub(pepenet_channels["update_control"],
-                              control_codes["uploading_finished"])
-
+                              control_codes["updating_finished"])
 
     def _on_update_control(self, data):
-        if data["msg"] == control_codes["uploading_finished"]:
+        """Callback when pubsub updates
+        data has the following keys: ["content", "sender", "timestamp"]"""
+        logging.debug("Received. {}".format(data))
+        code = b64decode(data["content"]).decode('utf8')
+        if code == control_codes["updating_finished"]:
             self._on_update_request(data["sender"])
 
     def _on_update_request(self, sender_id):
@@ -87,7 +94,7 @@ class PepeMan:
             we upload our hashes
         """
         pepe_hash = self.pubsub.\
-            topic_pop_messages_from_sender(pepenet_channels["upload"],
+            topic_pop_messages_from_sender(pepenet_channels["update"],
                                            sender_id)
 
         logging.debug("updating hashes: {}".format(pepe_hash))
@@ -101,15 +108,16 @@ class PepeMan:
             for i in delta:
                 self.ipfs.topic_pub(pepenet_channels["update"])
 
-        self.local_pepes.update((new_hash_delta,))
+        self.local_pepes.update(new_hash_delta)
 
     def _on_upload(self, data):
         """Callback called when someone on the network uploads a pepe
         self.local_pepes is set, so if the pepe is a duplicate i will not
         be added twice"""
 
-        self.local_pepes.update((data["content"],))
-        logging.info("Received pepe: {}".format(data["content"]))
+        self._register_pepe(b64decode(data["content"]).decode('utf8'))
+        logging.info("Received pepe: {}".format(b64decode(data["content"])
+                                                .decode('utf8')))
 
     def get_peer_number(self):
         "Returns the number of connected peers to the network"
@@ -136,12 +144,14 @@ class PepeMan:
         """
         Given the local path relative to the working directory
         it uploads the pepe image to the network
+        returns its hash
         """
         logging.info("Uploading pepe: {}".format(path))
         res = self.ipfs_conn.add(path)
         self.pubsub.topic_pub(pepenet_channels["upload"], res["Hash"])
         self._register_pepe(res["Hash"])
         logging.info("Uploaded from {} as {}".format(path, res["Hash"]))
+        return res["Hash"]
 
     def pin_pepe(self, pepe_hash):
         "Pins a pepe to your ipfs repository"
