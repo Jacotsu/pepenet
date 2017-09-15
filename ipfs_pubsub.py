@@ -1,6 +1,5 @@
 from urllib import request
 import requests
-from base64 import b64decode
 from threading import Thread
 from time import sleep
 from time import time
@@ -66,6 +65,8 @@ class PubSub:
                 if msg:
                     decoded_msg = msg.decode("utf-8")
                     if decoded_msg != "{}":
+                        if "data" not in decoded_msg:
+                            continue
                         # Here we get the actual data in base 64
                         data = {"content":
                                 decoded_msg.split(",")[1].split(":")[1],
@@ -73,7 +74,9 @@ class PubSub:
                                 split(":")[1],
                                 "timestamp": time()
                                 }
+
                         logging.debug("Received data: ".format(data))
+
                         if data:
                             for callback in self.\
                                             subscriptions[topic]["on_receive"]:
@@ -125,7 +128,7 @@ class PubSub:
     def topic_pop_message(self, topic):
         # FIFO data stack
         if self.subscriptions[topic]["msg"]:
-            return b64decode(self.subscriptions[topic]["msg"].pop(0))
+            return self.subscriptions[topic]["msg"].pop(0)
 
     def topic_pop_messages_from_sender(self, topic, sender):
         # FIFO data stack
@@ -134,11 +137,14 @@ class PubSub:
         if self.subscriptions[topic]["msg"]:
             for msg in self.subscriptions[topic]["msg"]:
                 if msg["sender"] == sender:
-                    messages.update(b64decode(msg["content"]))
+                    messages.update((msg["content"],))
                     removable.append((msg,))
 
             for msg in removable:
+                try:
                     self.subscriptions[topic]["msg"].remove(msg)
+                except:
+                    pass
 
         return messages
 

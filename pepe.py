@@ -19,10 +19,10 @@ def load_hash_set(path):
     try:
         with open(path, "r") as hash_list:
             for i in hash_list:
-                hashes.update((i,))
+                hashes.update((i.rstrip(),))
     except FileNotFoundError:
         open(path, "w").close()
-
+    logging.debug("Loaded {} as {}".format(path, hashes))
     return hashes
 
 
@@ -31,7 +31,9 @@ def save_hash_set(path, hash_set):
     malicious files or protecting the dht"""
     with open(path, "w") as hash_list:
         for i in hash_set:
-            hash_list.write(i + "\n")
+            if i != "":
+                hash_list.write(i + "\n")
+    logging.debug("saved {} as {}".format(path, hash_set))
 
 
 class PepeMan:
@@ -93,9 +95,14 @@ class PepeMan:
             After the updater has sent his uploading_finished CC
             we upload our hashes
         """
-        pepe_hash = self.pubsub.\
+        pepe_hash = []
+        encoded_pepe_hash = self.pubsub.\
             topic_pop_messages_from_sender(pepenet_channels["update"],
                                            sender_id)
+        logging.debug("update_request: {}".format(encoded_pepe_hash))
+        for i in encoded_pepe_hash:
+            logging.debug("decoding {} decoded {}".format(i, b64decode(i)))
+            pepe_hash.append(b64decode(i).decode("utf-8"))
 
         logging.debug("updating hashes: {}".format(pepe_hash))
         # We remove the pepes that we don't want
@@ -106,7 +113,7 @@ class PepeMan:
         if (received_hashes not in self.local_pepes):
             delta = self.local_pepes - received_hashes
             for i in delta:
-                self.ipfs.topic_pub(pepenet_channels["update"])
+                self.pubsub.topic_pub(pepenet_channels["update"], i)
 
         self.local_pepes.update(new_hash_delta)
 
