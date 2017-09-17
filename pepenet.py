@@ -9,9 +9,12 @@ from threading import Thread
 from time import sleep
 
 ipfs_host = "localhost"
-ipfs_port = "5001"
+ipfs_port = 5001
+ipfs_web_port = 8080
 
-UPLOAD_FOLDER = 'static/rare_pepes'
+flask_port = 8000
+
+UPLOAD_FOLDER = 'tmp'
 ALLOWED_EXTENSIONS = set(['txt', 'png', 'jpg', 'jpeg'])
 
 if not os.path.exists(UPLOAD_FOLDER):
@@ -44,7 +47,9 @@ def get_pepes():
     result = []
     for i in pman.get_all_pepes():
         logging.debug("Showing: {}".format(i))
-        pepe = {"url": "http://{}:{}/ipfs/{}".format(ipfs_host, 8080, i),
+        pepe = {"url": "http://{}:{}/ipfs/{}".format(ipfs_host,
+                                                     ipfs_web_port,
+                                                     i),
                 "normieness": 1,
                 "hash": i
                 }
@@ -118,6 +123,8 @@ def upload_file():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             pman.upload_pepe(os.path.join(app.config['UPLOAD_FOLDER'],
                                           filename))
+            # We delete the file because ipfs has copied it into its repository
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             return "File uploaded"
 
     return '''
@@ -146,4 +153,4 @@ if __name__ == "__main__":
     data_saver_thread = Thread(target=save_pepes)
     data_saver_thread.start()
     logging.debug("Flask path: {}".format(app.instance_path))
-    app.run(port=8000, debug=True)
+    app.run(port=flask_port, debug=True)
