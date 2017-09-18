@@ -1,0 +1,57 @@
+body {
+    font-family: arial, helvetica, clean, sans-serif;
+    font-size: 1em;
+
+    background: #eeffee;
+
+    width: 80%;
+    margin: auto;
+}
+
+.header_title {
+    text-align: center;
+    margin: auto;
+}
+
+.header_pic {
+    width: 10%;
+}
+
+.content_div {
+    display: inline-block;
+}
+
+.ipfs_info {
+    word-wrap: break-word;
+}
+
+
+/* Items */
+.pepe_item {
+    border: .1rem solid #008800;
+    background: #ccffcc;
+    width: 24%;
+    border-radius: 1rem;
+    display: inherit;
+    margin-bottom: 0.5rem;
+    min-width: 15rem;
+}
+
+.pepe_image {
+    overflow: hidden;
+}
+
+.pepe_image_file {
+    width: 100%;
+    border-radius: 1rem 1rem 0 0;
+    object-fit: cover;
+    height: 70%;
+}
+
+.pepe_info {
+    text-align: center;
+}
+
+.pepe_buttons {
+    text-align: left;
+}
