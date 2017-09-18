@@ -34,7 +34,7 @@
 
         </style>
 
-        {% include 'default/sidebar.html' %}
+        {% include 'sidebar.html' %}
 
         <div class="main_div">
             <div class="header_div">
@@ -44,12 +44,12 @@
                 </h1>
             </div>
             Connected peers: {{peer_n}}
-            {% include 'default/ipfs_info.html' %}
+            {% include 'ipfs_info.html' %}
             <h1>Upload new File</h1>
 
             <form method="post"
                   enctype="multipart/form-data"
-                  action="/pepe_upload">
+                  action="/upload">
               <input name="file" type="file" multiple>
               <input value="Upload!" type="submit">
             </form>
@@ -60,7 +60,7 @@
             <div class="content_div">
                 {% for pepe in rare_pepes %}
                     {% with pepe=pepe %}
-                        {% include 'default/item.html' %}
+                        {% include 'item.html' %}
                     {% endwith %}
                 {%endfor%}
             </div>
