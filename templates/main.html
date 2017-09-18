@@ -1,7 +1,6 @@
 <html>
 
     <head>
-        <script src="static/js/dropzone.js"></script>
     </head>
 
     <body>
@@ -48,14 +47,11 @@
             {% include 'default/ipfs_info.html' %}
             <h1>Upload new File</h1>
 
-            <form class="dropzone needsclick dz-clickable"
-                  id="pepe_upload_form"
-                  method="post"
+            <form method="post"
                   enctype="multipart/form-data"
                   action="/pepe_upload">
-                <div class="fallback">
-                    <input name="file" type="file" multiple />
-                </div>
+              <input name="file" type="file" multiple>
+              <input value="Upload!" type="submit">
             </form>
 
 	    <div>
