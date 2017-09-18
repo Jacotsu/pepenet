@@ -2,7 +2,7 @@
 import ipfsapi
 import os
 import pepe
-from flask import Flask, request, redirect, render_template, flash
+from flask import Flask, request, redirect, render_template
 from werkzeug.utils import secure_filename
 import logging
 from threading import Thread
@@ -15,7 +15,7 @@ ipfs_web_port = 8080
 flask_port = 8000
 
 UPLOAD_FOLDER = 'tmp'
-ALLOWED_EXTENSIONS = set(['txt', 'png', 'jpg', 'jpeg'])
+ALLOWED_EXTENSIONS = ('.txt', '.png', '.jpg', '.jpeg')
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -25,22 +25,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 ipfs = ipfsapi.connect(ipfs_host, ipfs_port)
 pman = pepe.PepeMan(ipfs)
-
-theme = "default"
-
-
-def generate_pepes():
-    "Used for debugging"
-    pepe1 = {"url": "https://media4.s-nbcnews.com/j/msnbc/components/video/"
-             "201609"
-             "/a_ov_pepe_160928.nbcnews-ux-1080-600.jpg",
-             "normieness": 1,
-             "hash": ""
-             }
-    result = []
-    for i in range(100):
-        result.append(pepe1)
-    return result
 
 
 def get_pepes():
@@ -57,22 +41,9 @@ def get_pepes():
     return result
 
 
-@app.route('/pepe/fetch/<id_hash>')
-def fetch_pepe(id_hash):
-    pass
-
-
-@app.route("/555")
-def home_page():
-    return render_template("default/main.html",
-                           ipfs_info=ipfs.id(),
-                           rare_pepes=generate_pepes(),
-                           peer_n=pman.get_peer_number())
-
-
 @app.route("/")
-def home_page_deb():
-    return render_template("default/main.html",
+def home_page():
+    return render_template("main.html",
                            ipfs_info=ipfs.id(),
                            rare_pepes=get_pepes(),
                            peer_n=pman.get_peer_number(),
@@ -80,62 +51,28 @@ def home_page_deb():
                            port=ipfs_port)
 
 
-def get_pinned_pepes(hash_list):
-    pepes = []
-    for pepe_hash in hash_list:
-        pman.get_pepe(pepe_hash)
-        pepe = {"url": "./{}".format(pepe_hash),
-                "normieness": 1,
-                "hash": ""
-                }
-        pepes.append(pepe)
-
-    return pepes
-
-
-@app.route("/pinned_pepes")
-def pinned_pepes_page():
-    return render_template("default/main.html",
-                           ipfs_info=ipfs.id(),
-                           rare_pepes=get_pinned_pepes(pman.ls_pinned_pepes()))
-
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-@app.route('/pepe_upload', methods=['GET', 'POST'])
+@app.route('/upload', methods=['POST'])
 def upload_file():
-    if request.method == 'POST':
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit a empty part without filename
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            pman.upload_pepe(os.path.join(app.config['UPLOAD_FOLDER'],
-                                          filename))
-            # We delete the file because ipfs has copied it into its repository
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return "File uploaded"
+    if 'file' not in request.files:
+        return 'No file part', 400
 
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post enctype=multipart/form-data>
-      <p><input type=file name=file>
-         <input type=submit value=Upload>
-    </form>
-    '''
+    form_file = request.files['file']
+
+    if form_file.filename == '':
+        return 'No selected file', 400
+
+    if form_file.filename.lower().endswith(ALLOWED_EXTENSIONS):
+        filename = secure_filename(form_file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+        form_file.save(file_path)
+        pman.upload_pepe(file_path)
+
+        # We delete the file because ipfs has copied it into its repository
+        os.remove(file_path)
+        return redirect('/')
+    else:
+        return 'Bad extension', 400
 
 
 def save_pepes():

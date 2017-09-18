@@ -1,0 +1,49 @@
+<html>
+    <head>
+      <meta charset="utf-8">
+      <title>pepenet</title>
+      <link href="static/style.css" rel="stylesheet" type="text/css">
+    </head>
+
+    <body>
+      <div class="header_div">
+        <img class="header_pic" src="static/imgs/logo.svg">
+        <br>
+        <h1 class="header_title">
+          pepenet</h1>
+      </div>
+
+      <ul class="ipfs_info">
+        <li>Connected peers: {{peer_n}}</li>
+        <li>Addresses: <ul>
+            {% for addr in ipfs_info.Addresses %}
+            <li>{{addr}}</li>
+            {% endfor %}
+          </ul>
+        </li>
+        <li>Protocol version: {{ipfs_info.ProtocolVersion}}</li>
+        <li>Public key: {{ipfs_info.PublicKey}}</li>
+        <li>ID: {{ipfs_info.ID}}</li>
+        <li>Agent version: {{ipfs_info.AgentVersion}}</li>
+      </ul>
+
+      <form method="post"
+            enctype="multipart/form-data"
+            action="/upload">
+        <input name="file" type="file" multiple>
+        <input value="Upload!" type="submit">
+      </form>
+
+	    </div>
+          <div class="content_div">
+            {% for pepe in rare_pepes %}
+                {% with pepe=pepe %}
+                    {% include 'item.html' %}
+                {% endwith %}
+            {%endfor%}
+          </div>
+      </div>
+
+    </body>
+
+</html>
