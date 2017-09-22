@@ -18,8 +18,8 @@ def load_hash_set(path):
     hashes = set()
     try:
         with open(path, "r") as hash_list:
-            for i in hash_list:
-                hashes.update((i.rstrip(),))
+            for pepe_hash in hash_list:
+                hashes.update((pepe_hash.rstrip(),))
     except FileNotFoundError:
         os.makedirs("/".join(path.split("/")[:-1]), exist_ok=True)
         open(path, "w").close()
@@ -31,9 +31,9 @@ def save_hash_set(path, hash_set):
     """Loads a local copy of pepe hashes, useful for banning locally
     malicious files or protecting the dht"""
     with open(path, "w") as hash_list:
-        for i in hash_set:
-            if i != "":
-                hash_list.write(i + "\n")
+        for pepe_hash in hash_set:
+            if pepe_hash != "":
+                hash_list.write(pepe_hash + "\n")
     logging.debug("saved {} as {}".format(path, hash_set))
 
 
@@ -96,26 +96,27 @@ class PepeMan:
             After the updater has sent his uploading_finished CC
             we upload our hashes
         """
-        pepe_hash = []
-        encoded_pepe_hash = self.pubsub.\
+        pepe_hashes = []
+        encoded_pepe_hashes = self.pubsub.\
             topic_pop_messages_from_sender(pepenet_channels["update"],
                                            sender_id)
 
-        for i in encoded_pepe_hash:
-            logging.debug("decoding {} decoded {}".format(i, b64decode(i)))
-            pepe_hash.append(b64decode(i).decode("utf-8"))
+        for pepe_hash in encoded_pepe_hashes:
+            logging.debug("decoding {} decoded {}"
+                          .format(pepe_hash, b64decode(pepe_hash)))
+            pepe_hashes.append(b64decode(pepe_hash).decode("utf-8"))
 
-        logging.debug("updating hashes: {}".format(pepe_hash))
+        logging.debug("updating hashes: {}".format(pepe_hashes))
         # We remove the pepes that we don't want
-        received_hashes = set(pepe_hash) - self.banned_pepes
+        received_hashes = set(pepe_hashes) - self.banned_pepes
         # Then we check if they've sent us some new hashes
         new_hash_delta = received_hashes - self.local_pepes
 
         delta = self.local_pepes - received_hashes
         logging.debug("Sending hashes: {}".format(delta))
 
-        for i in delta:
-            self.pubsub.topic_pub(pepenet_channels["update"], i)
+        for pepe_hash in delta:
+            self.pubsub.topic_pub(pepenet_channels["update"], pepe_hash)
         if delta:
             self.pubsub.topic_pub(pepenet_channels["update_control"],
                                   control_codes["updating_finished"])

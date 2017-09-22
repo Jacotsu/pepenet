@@ -29,13 +29,13 @@ pman = pepe.PepeMan(ipfs)
 
 def get_pepes():
     result = []
-    for i in pman.get_all_pepes():
-        logging.debug("Showing: {}".format(i))
+    for pepe_hash in pman.get_all_pepes():
+        logging.debug("Showing: {}".format(pepe_hash))
         pepe = {"url": "http://{}:{}/ipfs/{}".format(ipfs_host,
                                                      ipfs_web_port,
-                                                     i),
+                                                     pepe_hash),
                 "normieness": 1,
-                "hash": i
+                "hash": pepe_hash
                 }
         result.append(pepe)
     return result
