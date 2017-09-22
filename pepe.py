@@ -15,15 +15,18 @@ control_codes = {"updating_finished": "0"
 def load_hash_set(path):
     """Loads a local copy of pepe hashes, useful for banning locally
     malicious files or protecting the dht"""
-    hashes = set()
     try:
         with open(path, "r") as hash_list:
-            for pepe_hash in hash_list:
-                hashes.update((pepe_hash.rstrip(),))
+            hashes = {pepe_hash.rstrip() for pepe_hash in hash_list}
+            logging.debug("Loaded {} as {}".format(path, hashes))
+        return hashes
+
     except FileNotFoundError:
-        os.makedirs("/".join(path.split("/")[:-1]), exist_ok=True)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         open(path, "w").close()
-    logging.debug("Loaded {} as {}".format(path, hashes))
+        logging.debug("Found an empty hash file")
+        return set()
+
     return hashes
 
 
@@ -96,19 +99,16 @@ class PepeMan:
             After the updater has sent his uploading_finished CC
             we upload our hashes
         """
-        pepe_hashes = []
         encoded_pepe_hashes = self.pubsub.\
             topic_pop_messages_from_sender(pepenet_channels["update"],
                                            sender_id)
 
-        for pepe_hash in encoded_pepe_hashes:
-            logging.debug("decoding {} decoded {}"
-                          .format(pepe_hash, b64decode(pepe_hash)))
-            pepe_hashes.append(b64decode(pepe_hash).decode("utf-8"))
+        pepe_hashes = {b64decode(pepe_hash).decode("utf-8")
+                       for pepe_hash in encoded_pepe_hashes}
 
         logging.debug("updating hashes: {}".format(pepe_hashes))
         # We remove the pepes that we don't want
-        received_hashes = set(pepe_hashes) - self.banned_pepes
+        received_hashes = pepe_hashes - self.banned_pepes
         # Then we check if they've sent us some new hashes
         new_hash_delta = received_hashes - self.local_pepes
 
@@ -139,8 +139,8 @@ class PepeMan:
     def get_pepe(self, pepe_hash):
         "Downloads pepe from ipfs and saves it in database folder"
         self.ipfs_conn.get(pepe_hash)
-        os.rename("{}".format(pepe_hash), "{}/{}".format(self.database,
-                                                         pepe_hash))
+        target_path = os.path.join(self.database, pepe_hash)
+        os.rename(pepe_hash, target_path)
         logging.info("Downloaded: {}".format(pepe_hash))
 
     def get_all_pepes(self):
