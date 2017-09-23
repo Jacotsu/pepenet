@@ -148,6 +148,10 @@ class PubSub:
 
         return messages
 
+    def topic_message_num(self, topic):
+        "Returns the number of messages in the queue"
+        return len(self.subscriptions[topic]["msg"])
+
 
 if __name__ == "__main__":
     logging.error("Don't execute this module")

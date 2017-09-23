@@ -1,11 +1,16 @@
 import ipfs_pubsub
+import distr_data_man
 from base64 import b64decode
 import os
+import time
 import logging
 
 pepenet_channels = {"upload": "dev_pepenet_pepes_upload",
                     "update_control": "dev_pepenet_pepes_update_control",
                     "update": "dev_pepenet_pepes_update"
+                    "metadata_timestamp": "dev_pepenet_pepes_"\
+                                          "metadata_timestamp",
+                    "metadata_tags": "dev_pepenet_pepes_metadata_tags"
                     }
 control_codes = {"updating_finished": "0"
 
@@ -38,6 +43,7 @@ def save_hash_set(path, hash_set):
             if pepe_hash != "":
                 hash_list.write(pepe_hash + "\n")
     logging.debug("saved {} as {}".format(path, hash_set))
+
 
 
 class PepeMan:
@@ -131,6 +137,28 @@ class PepeMan:
         self._register_pepe(b64decode(data["content"]).decode('utf8'))
         logging.info("Received pepe: {}".format(b64decode(data["content"])
                                                 .decode('utf8')))
+
+    def get_timestamp(self, pepe):
+        """
+        The client sends a dict containing the pepe hash and it's possible
+        timestamp, and then waits until a percentage of the network responds.
+        Other clients respond only if their timestamp is different.
+        If the number of responses > the number of non responses we consider
+        the most popoular one as valid
+        """
+        # We want atleast 60% of the network to agree
+        minimun_response_ratio = .6
+
+        compact_pepe = {"pepe_hash": pepe.hash,
+                        "timestamp": pepe.timestamp
+                        }
+        self.pubsub.pub(pepenet_channels["metadata_timestamp"], compact_pepe)
+
+        pass
+
+    def _on_timestamp_update(self, data):
+        "Timestamp channel callback"
+        pass
 
     def get_peer_number(self):
         "Returns the number of connected peers to the network"
@@ -238,7 +266,6 @@ class PepeMan:
 
         return ("Novel", 5)
 
-
     def pin_pepe(self, pepe_hash):
         "Pins a pepe to your ipfs repository"
         self.ipfs_conn.pin_add(pepe_hash)
@@ -265,11 +292,42 @@ class PepeMan:
 
 
 class Pepe:
-    def __init__(self, image_data):
-        pass
+    def __init__(self, pepe_hash, timestamp=time.time(), tags=[]):
+        self.hash = pepe_hash
+        self.timestamp = timestamp
+        self.tags = tags
 
-    def calc_normieness(self, pepe_hash):
-        pass
+    def __repr__(self):
+        dict_repr = {"pepe_hash": self.hash,
+                     "timestamp": self.timestamp,
+                     "tags": self.tags
+                     }
+        return str(dict_repr)
+
+    def __eq__(self, other):
+        """
+        This method is used when you're comparing 2 pepes in a logical
+        construct
+        """
+        if isinstance(other, Pepe):
+            return ((self.hash == other.hash) and
+                    (self.timestamp == other.timestamp) and
+                    (self.tags == other.tags))
+        else:
+            return False
+
+    def __ne__(self, other):
+        """
+        This method is used when you're comparing 2 pepes in a logical
+        construct
+        """
+        return (not self.__eq__(other))
+
+    def __hash__(self):
+        """
+        This method is used when you're searching in a hash table or set
+        """
+        return self.hash
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 # Pepenet specific binary files
-*.ree
+*_client
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
