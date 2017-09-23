@@ -7,7 +7,7 @@ import logging
 
 pepenet_channels = {"upload": "dev_pepenet_pepes_upload",
                     "update_control": "dev_pepenet_pepes_update_control",
-                    "update": "dev_pepenet_pepes_update"
+                    "update": "dev_pepenet_pepes_update",
                     "metadata_timestamp": "dev_pepenet_pepes_"\
                                           "metadata_timestamp",
                     "metadata_tags": "dev_pepenet_pepes_metadata_tags"
