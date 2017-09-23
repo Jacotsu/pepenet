@@ -51,6 +51,12 @@ def home_page():
                            port=ipfs_port)
 
 
+@app.route("/download/<pepe_hash>")
+def download_file(pepe_hash):
+    pman.pin_pepe(pepe_hash)
+    return redirect('/')
+
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
