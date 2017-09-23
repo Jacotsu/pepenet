@@ -43,6 +43,27 @@
             {%endfor%}
           </div>
       </div>
+      <script>
+        function setNormieness(element) {
+              url = element.getElementsByTagName("a")[0].href
+              pepe_hash = url.split("/").pop();
+
+              var xhttp = new XMLHttpRequest();
+              xhttp.onreadystatechange = function() {
+                  this.element = element;
+                if (this.readyState == 4 && this.status == 200) {
+                    normies = this.element.getElementsByClassName("normieness");
+                    normies[0].innerHTML = this.responseText;
+                }
+              };
+              xhttp.open("GET", "calc_normieness/" + pepe_hash , true);
+              xhttp.send();
+        }
+        var pepe_cards = document.getElementsByClassName("pepe_item");
+        for (card in pepe_cards) {
+            setNormieness(pepe_cards[card]);
+        }
+      </script> 
 
     </body>
 

@@ -34,11 +34,17 @@ def get_pepes():
         pepe = {"url": "http://{}:{}/ipfs/{}".format(ipfs_host,
                                                      ipfs_web_port,
                                                      pepe_hash),
-                "normieness": 1,
+                "normieness": "Calculating...",
                 "hash": pepe_hash
                 }
         result.append(pepe)
     return result
+
+
+@app.route("/calc_normieness/<pepe_hash>")
+def normieness_calc(pepe_hash):
+    result = pman.calc_normieness(pepe_hash)
+    return "{} ({})".format(*result)
 
 
 @app.route("/")

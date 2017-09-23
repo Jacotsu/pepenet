@@ -166,6 +166,79 @@ class PepeMan:
         logging.info("Uploaded from {} as {}".format(path, res["Hash"]))
         return res["Hash"]
 
+    def calc_normieness(self, pepe_hash):
+        """
+            This function calculates the normieness of a pepe based on the
+            function definition
+        """
+        day = 24
+        week = 168
+        month = 730
+        year = 87600
+
+
+        pepe_types = {"Absolute cancer": {"perc_bounds": (.8, 1),
+                                          "time_threshold": (2*week, 100*year),
+                                          "val": 0
+                                          },
+                      "Pop": {"perc_bounds": (.8, 1),
+                              "time_threshold": (day, 2*week),
+                              "val": 1
+                              },
+                      "Spammed": {"perc_bounds": (.05, 1),
+                                  "time_threshold": (0, day),
+                                  "val": 2
+                                  },
+                      "Normified": {"perc_bounds": (.05, .2),
+                                    "time_threshold": (day, 100*year),
+                                    "val": 3
+                                    },
+                      "Outdated": {"perc_bounds": (0, .05),
+                                   "time_threshold": (2*week, 100*year),
+                                   "val": 4
+                                   },
+                      "Novel": {"perc_bounds": (0, .05),
+                                "time_threshold": (0, day),
+                                "val": 5
+                                },
+                      "Artifact": {"perc_bounds": (.05, .2),
+                                   "time_threshold": (1*month, 100*year),
+                                   "val": 6
+                                   },
+                      "Rare": {"perc_bounds": (.05, .2),
+                               "time_threshold": (day, 100*year),
+                               "val": 7
+                               }
+                      }
+
+        copies_number = 0
+        for entry in self.ipfs_conn.dht_findprovs(pepe_hash):
+            if entry["Type"] == 4:
+                copies_number += 1
+
+        # This avoid the 0 division and doesn't skew the results
+        peer_number = self.get_peer_number() + 1
+
+        # We should put the time difference from the posting time and the
+        # actual time here
+        delta_time = 0
+
+        perc_val = copies_number / peer_number
+
+        logging.debug("{}/{} Peers have {}".format(copies_number,
+                                                   peer_number,
+                                                   pepe_hash))
+
+        for name, info in pepe_types.items():
+            if perc_val <= info["perc_bounds"][1] and \
+               perc_val >= info["perc_bounds"][0]:
+                logging.debug("Calculated normieness for: {} Result: {} ({})".
+                              format(pepe_hash, name, info))
+                return (name, info["val"])
+
+        return ("Novel", 5)
+
+
     def pin_pepe(self, pepe_hash):
         "Pins a pepe to your ipfs repository"
         self.ipfs_conn.pin_add(pepe_hash)
