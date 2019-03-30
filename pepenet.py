@@ -4,11 +4,16 @@ import os
 import pepe
 from flask import Flask, request, redirect, render_template
 from werkzeug.utils import secure_filename
+from argparse import ArgumentParser
 import logging
 from threading import Thread
 from time import sleep
 
-ipfs_host = "localhost"
+parser = ArgumentParser()
+parser.add_argument('-H', default='localhost')
+args = parser.parse_args()
+
+ipfs_host = args.H
 ipfs_port = 5001
 ipfs_web_port = 8080
 
@@ -24,7 +29,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 ipfs = ipfsapi.connect(ipfs_host, ipfs_port)
-pman = pepe.PepeMan(ipfs)
+pman = pepe.PepeMan(ipfs, ipfs_host)
 
 
 def get_pepes():

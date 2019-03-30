@@ -1,0 +1,16 @@
+version: '2'
+services:
+  pepenet-uwsgi:
+    build: .
+    ports:
+     - "8080:8080"
+  ipfs:
+    image: "ipfs/go-ipfs:latest"
+    command: "daemon --enable-pubsub-experiment"
+    volumes:
+      - "/var/tmp/ipfs/export:/export"
+      - "/var/tmp/ipfs/data:/data/ipfs"
+    ports:
+      - "4001:4001"
+      - "8081:8080"
+      - "5001:5001"

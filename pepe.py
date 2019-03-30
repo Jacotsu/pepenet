@@ -1,6 +1,7 @@
 import ipfs_pubsub
 import distr_data_man
 from base64 import b64decode
+import socket
 import os
 import time
 import logging
@@ -47,10 +48,11 @@ def save_hash_set(path, hash_set):
 class PepeMan:
     def __init__(self,
                  ipfs_conn,
+                 host='localhost',
                  database="rare_pepes",
                  banned_pepes_path="rare_pepes/avoid_pepes.db",
                  local_pepes_path="rare_pepes/known_pepes.db"):
-        self.pubsub = ipfs_pubsub.PubSub()
+        self.pubsub = ipfs_pubsub.PubSub(socket.gethostbyname(host))
         self.ipfs_conn = ipfs_conn
         self.database = database
 
