@@ -1,7 +1,6 @@
 import ipfs_pubsub
 import distr_data_man
 from base64 import b64decode
-import socket
 import os
 import time
 import logging
@@ -52,7 +51,7 @@ class PepeMan:
                  database="rare_pepes",
                  banned_pepes_path="rare_pepes/avoid_pepes.db",
                  local_pepes_path="rare_pepes/known_pepes.db"):
-        self.pubsub = ipfs_pubsub.PubSub(socket.gethostbyname(host))
+        self.pubsub = ipfs_pubsub.PubSub(host)
         self.ipfs_conn = ipfs_conn
         self.database = database
 

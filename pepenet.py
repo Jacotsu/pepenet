@@ -2,6 +2,7 @@
 import ipfsapi
 import os
 import pepe
+import socket
 from flask import Flask, request, redirect, render_template
 from werkzeug.utils import secure_filename
 from argparse import ArgumentParser
@@ -13,7 +14,7 @@ parser = ArgumentParser()
 parser.add_argument('-H', default='localhost')
 args = parser.parse_args()
 
-ipfs_host = args.H
+ipfs_host = socket.gethostbyname(args.H)
 ipfs_port = 5001
 ipfs_web_port = 8080
 
