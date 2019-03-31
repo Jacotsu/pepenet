@@ -1,12 +1,12 @@
-FROM tiangolo/uwsgi-nginx:python3.6-alpine3.8
+FROM python:3.8.0a3-alpine3.9
 
-ENV NGINX_MAX_UPLOAD 1m
-ENV LISTEN_PORT 8080
+ENV IPFS_HOST ipfs
 
 COPY . /app
 
 WORKDIR /app
-RUN  chown -R nginx:nginx . & \
-  pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
-EXPOSE 8080
+CMD ["sh", "-c", "python3 pepenet.py -H $IPFS_HOST"]
+
+EXPOSE 8000

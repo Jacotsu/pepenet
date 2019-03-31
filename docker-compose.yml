@@ -1,11 +1,5 @@
 version: '2'
 services:
-  pepenet-uwsgi:
-    build: .
-    ports:
-     - "8080:8080"
-    depends_on:
-      - "ipfs"
   ipfs:
     image: "ipfs/go-ipfs:latest"
     command: "daemon --enable-pubsub-experiment"
@@ -16,3 +10,11 @@ services:
       - "4001:4001"
       - "8081:8080"
       - "5001:5001"
+  pepenet:
+    build: .
+    ports:
+     - "8080:8000"
+    environment:
+      - IPFS_HOST=ipfs
+    depends_on:
+      - ipfs

@@ -2,8 +2,8 @@
 import ipfsapi
 import os
 import pepe
-import socket
 import requests
+import socket
 import base64
 from flask import Flask, request, redirect, render_template
 from werkzeug.utils import secure_filename
@@ -16,7 +16,15 @@ parser = ArgumentParser()
 parser.add_argument('-H', default='localhost')
 args = parser.parse_args()
 
-ipfs_host = socket.gethostbyname(args.H)
+ipfs_host = None
+
+for _ in range(5):
+    try:
+        ipfs_host = socket.gethostbyname(args.H)
+        break
+    except socket.gaierror:
+        sleep(10)
+
 ipfs_port = 5001
 ipfs_web_port = 8080
 
@@ -31,8 +39,15 @@ if not os.path.exists(UPLOAD_FOLDER):
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-ipfs = ipfsapi.connect(ipfs_host, ipfs_port)
-pman = pepe.PepeMan(ipfs, ipfs_host)
+ipfs = None
+pman = None
+for _ in range(5):
+    try:
+        ipfs = ipfsapi.connect(ipfs_host, ipfs_port)
+        pman = pepe.PepeMan(ipfs, ipfs_host)
+        break
+    except ipfsapi.exceptions.ConnectionError:
+        sleep(10)
 
 
 def get_pepes():
@@ -120,4 +135,4 @@ if __name__ == "__main__":
     data_saver_thread = Thread(target=save_pepes)
     data_saver_thread.start()
     logging.debug("Flask path: {}".format(app.instance_path))
-    app.run(port=flask_port, debug=True)
+    app.run('0.0.0.0', port=flask_port, debug=True)
