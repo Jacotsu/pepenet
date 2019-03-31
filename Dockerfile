@@ -6,6 +6,7 @@ ENV LISTEN_PORT 8080
 COPY . /app
 
 WORKDIR /app
-RUN pip3 install -r requirements.txt
+RUN  chown -R nginx:nginx . & \
+  pip3 install -r requirements.txt
 
 EXPOSE 8080

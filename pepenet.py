@@ -49,7 +49,8 @@ def get_pepes():
 
 @app.route("/calc_normieness/<pepe_hash>")
 def normieness_calc(pepe_hash):
-    result = pman.calc_normieness(pepe_hash)
+    #result = pman.calc_normieness(pepe_hash)
+    result = (0 ,0)
     return "{} ({})".format(*result)
 
 
