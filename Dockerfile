@@ -1,4 +1,4 @@
-FROM tiangolo/uwsgi-nginx:python3.7
+FROM tiangolo/uwsgi-nginx:python3.6-alpine3.8
 
 ENV NGINX_MAX_UPLOAD 1m
 ENV LISTEN_PORT 8080
