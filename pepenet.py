@@ -3,6 +3,8 @@ import ipfsapi
 import os
 import pepe
 import socket
+import requests
+import base64
 from flask import Flask, request, redirect, render_template
 from werkzeug.utils import secure_filename
 from argparse import ArgumentParser
@@ -44,6 +46,15 @@ def get_pepes():
                 "hash": pepe_hash
                 }
         result.append(pepe)
+
+    if request.headers.get('X-Forwarded-For'):
+        # We're behind a proxy so the user can't access the ipfs node
+        for pepe in result:
+            response = requests.get(pepe["url"])
+            uri = "data:{};base64,{}"\
+                .format(response.headers['Content-Type'],
+                        base64.b64encode(response.content).decode("utf-8"))
+            pepe["url"] = uri
     return result
 
 
